@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "fastapi-elasticsearch-data-catalog"
+version = "0.1.0"
+description = ""
+authors = ["awhipp"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+elasticsearch = "^8.10.0"
+fastapi = "^0.103.1"
+uvicorn = "^0.23.2"
+pydantic = "^2.4.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
