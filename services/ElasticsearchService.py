@@ -31,6 +31,14 @@ class ElasticsearchService:
         else:
             logger.info(f"Index already exists: {index_name}")
 
+    def delete_index(self, index_name="data_catalog"):
+        '''Deletes an index'''
+        if self.client.indices.exists(index=index_name):
+            self.client.indices.delete(index=index_name)
+            logger.info(f"Deleted index: {index_name}")
+        else:
+            logger.info(f"Index does not exist: {index_name}")
+
     def search(self, index_name="data_catalog", query=None):
         '''Searches for a query in an index'''
         if query is None:

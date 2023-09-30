@@ -18,20 +18,20 @@ class Domain(BaseModel):
     Pydantic model for a domain
     '''
     name: str
-    id: UUID4 = None
+    domain_id: UUID4 = None
     databases: list[Database] = []
 
     def create_domain(self):
         '''
         Creates a domain and returns it
         '''
-        self.id = uuid4()
+        self.domain_id = uuid4()
         new_domain = self.model_dump()
 
         if len(self.search(self.name)) > 0:
             raise HTTPException(status_code=400, detail=f"Domain with name: {self.name} already exists")
         else:
-            es.insert_new_document(index_name="data_catalog", document_id=self.id, document=new_domain)
+            es.insert_new_document(index_name="data_catalog", document_id=self.domain_id, document=new_domain)
 
         return new_domain
     
@@ -41,7 +41,7 @@ class Domain(BaseModel):
         '''
         es.client.index(
             index="data_catalog",
-            id=self.id,
+            id=self.domain_id,
             document=self.model_dump()
         )
         logger.info(f"Added domain: {self.name}")
