@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 
 # Domains
 # TODO breakout into its own controller 
-@app.post("/domains/", response_model=Domain)
+@app.post("/domains", response_model=Domain)
 async def create_domain(domain: Domain):
     '''
     Creates a domain and returns it
@@ -22,21 +22,21 @@ async def create_domain(domain: Domain):
     logger.info(f"Creating domain with name: {domain.name}")
     return domain.create_domain()
 
-@app.get("/domains/", response_model=Domain)
+@app.get("/domains", response_model=Domain)
 async def search_domains(
     name: str = Query(default="", description="Search name for domains"),
-    id: str = Query(default="", description="Search id for domains")
+    domain_id: str = Query(default="", description="Search id for domains")
 ):
     '''
     Searches for a domain by name and returns it
     '''
 
-    if id != "" and name != "":
+    if domain_id != "" and name != "":
         raise HTTPException(status_code=400, detail="Name or id must be provided")
-    elif id != "":
-        logger.info(f"Searching for domain with id: {id}")
-        query = id
-        results = domain_search(id=query)
+    elif domain_id != "":
+        logger.info(f"Searching for domain with id: {domain_id}")
+        query = domain_id
+        results = domain_search(domain_id=query)
     else:
         logger.info(f"Searching for domain with name: {name}")
         query = name
@@ -47,7 +47,7 @@ async def search_domains(
         raise HTTPException(status_code=500, detail=f"Found multiple domains with name/id: {query}")
     return results[0]
 
-@app.post("/databases/", response_model=Database)
+@app.post("/databases", response_model=Database)
 async def create_databases(database: Database):
     '''
     Creates a domain and returns it
@@ -55,22 +55,21 @@ async def create_databases(database: Database):
     logger.info(f"Creating database with name: {database.name} and domain_id: {database.domain_id}")
     return database.create_database()
 
-@app.get("/databases/", response_model=Database)
+@app.get("/databases", response_model=Database)
 async def search_databases(
-    domain_id: str = Query(..., description="Domain ID for the database"),
-    id: str = Query(default="", description="Search id for database name"),
+    database_id: str = Query(default="", description="Search id for database name"),
     name: str = Query(default="", description="Search name for database name")
 ):
     '''
     Searches for a database by name and returns it
     '''
-    if id != "" and name != "":
+    if database_id != "" and name != "":
         raise HTTPException(status_code=400, detail="Name or id must be provided")
-    elif id != "":
-        logger.info(f"Searching for database with id: {id}")
-        results = database_search(id=id)
+    elif database_id != "":
+        logger.info(f"Searching for database with database_id: {database_id}")
+        results = database_search(database_id=database_id)
         if len(results) == 0:
-            raise HTTPException(status_code=404, detail=f"Database with id: {id} not found")
+            raise HTTPException(status_code=404, detail=f"Database with database_id: {database_id} not found")
     else:
         logger.info(f"Searching for database with name: {name}")
         results = database_search(name=name)

@@ -6,7 +6,7 @@ from pydantic import UUID4
 from services.Logger import get_logger
 logger = get_logger(__name__)
 
-def search(name: str=None, id: UUID4=None):
+def search(name: str=None, domain_id: UUID4=None):
     '''
     Searches for a domain by name and returns it
     '''
@@ -19,15 +19,15 @@ def search(name: str=None, id: UUID4=None):
                 "name": name
             }
         }
-    elif id is not None:
+    elif domain_id is not None:
         query = {
             "match": {
-                "id": str(id)
+                "domain_id": str(domain_id)
             }
         }
     else:
-        raise HTTPException(status_code=400, detail="Name or id must be provided")
+        raise HTTPException(status_code=400, detail="Name or domain_id must be provided")
     
     results = es.search(index_name="data_catalog", query=query)
-    logger.info(f"Found {len(results)} domains with id/name: {str(name) or str(id)}")
+    logger.info(f"Found {len(results)} domains with id/name: {str(name) or str(domain_id)}")
     return results

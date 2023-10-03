@@ -18,16 +18,16 @@ class Database(BaseModel):
     '''
     name: str
     domain_id: UUID4
-    id: UUID4 = None
+    database_id: UUID4 = None
 
     def create_database(self):
         '''
         Creates a domain and returns it
         '''
-        self.id = uuid4()
+        self.database_id = uuid4()
         new_database = self.model_dump()
 
-        domain = domain_search(id=self.domain_id)
+        domain = domain_search(domain_id=self.domain_id)
 
         if len(domain) == 0:
             raise HTTPException(status_code=404, detail=f"Domain with id: {self.domain_id} not found")
@@ -35,12 +35,10 @@ class Database(BaseModel):
             domain = domain[0]
             for db in domain['databases']: # Cannot cast to Domain model because of circular dependency
                 if db['name'] == self.name:
-                    raise HTTPException(status_code=400, detail=f"Database with name: {self.name} already exists in domain: {domain.id}")
+                    raise HTTPException(status_code=400, detail=f"Database with name: {self.name} already exists in domain: {domain.domain_id}")
         else:
             raise HTTPException(status_code=500, detail=f"Found multiple domains with id: {self.domain_id}")
     
-        domain = domain_search(id=self.domain_id)
-        domain = domain[0]
         domain['databases'].append(new_database)  # Cannot cast to Domain model because of circular dependency
         logger.info(domain)
         es.update_document(document_id=self.domain_id, document=domain)
@@ -48,14 +46,3 @@ class Database(BaseModel):
 
         return new_database
     
-    # def add(self):
-    #     '''
-    #     Adds a domain to Elasticsearch
-    #     '''
-    #     es.client.index(
-    #         index="data_catalog",
-    #         id=self.id,
-    #         document=self.model_dump()
-    #     )
-    #     logger.info(f"Added domain: {self.name}")
-    #     return self
