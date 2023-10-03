@@ -147,7 +147,7 @@ files = [
 name = "httpcore"
 version = "0.18.0"
 description = "A minimal low-level HTTP client."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.8"
 files = [
@@ -169,7 +169,7 @@ socks = ["socksio (>=1.0.0,<2.0.0)"]
 name = "httpx"
 version = "0.25.0"
 description = "The next generation HTTP client."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.8"
 files = [
@@ -482,4 +482,4 @@ standard = ["colorama (>=0.4)", "httptools (>=0.5.0)", "python-dotenv (>=0.13)",
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "8c9ede4d378219fcd19fb80c6133df2c823446105fc684e86b63f77e0f8c198d"
+content-hash = "dcd55c6924f3b701138c43300d0a12caaeccab501263b93359698c550ef49ded"

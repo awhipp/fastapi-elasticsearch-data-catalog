@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 
 # Domains
 # TODO breakout into its own controller 
-@app.post("/domains/", response_model=Domain)
+@app.post("/domains", response_model=Domain)
 async def create_domain(domain: Domain):
     '''
     Creates a domain and returns it
@@ -22,7 +22,7 @@ async def create_domain(domain: Domain):
     logger.info(f"Creating domain with name: {domain.name}")
     return domain.create_domain()
 
-@app.get("/domains/", response_model=Domain)
+@app.get("/domains", response_model=Domain)
 async def search_domains(
     name: str = Query(default="", description="Search name for domains"),
     domain_id: str = Query(default="", description="Search id for domains")
@@ -47,7 +47,7 @@ async def search_domains(
         raise HTTPException(status_code=500, detail=f"Found multiple domains with name/id: {query}")
     return results[0]
 
-@app.post("/databases/", response_model=Database)
+@app.post("/databases", response_model=Database)
 async def create_databases(database: Database):
     '''
     Creates a domain and returns it
@@ -55,9 +55,8 @@ async def create_databases(database: Database):
     logger.info(f"Creating database with name: {database.name} and domain_id: {database.domain_id}")
     return database.create_database()
 
-@app.get("/databases/", response_model=Database)
+@app.get("/databases", response_model=Database)
 async def search_databases(
-    domain_id: str = Query(..., description="Domain ID for the database"),
     database_id: str = Query(default="", description="Search id for database name"),
     name: str = Query(default="", description="Search name for database name")
 ):

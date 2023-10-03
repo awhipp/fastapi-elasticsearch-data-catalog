@@ -1,9 +1,6 @@
 import app
-import asyncio
+import time
 from services.ElasticsearchService import ElasticsearchService
-
-from models.Database import Database
-from models.Domain import Domain
 
 import pytest
 
@@ -15,16 +12,22 @@ def ensure_elasticsearch():
     yield es
     es.delete_index()
 
-def test_create_domain_database():
+@pytest.fixture()
+def test_client():
     client = TestClient(app.app)
-    response = client.post("/domains", json={"name": "test_domain"})
+    yield client
+
+def test_e2e(test_client):
+    response = test_client.post("/domains", json={"name": "test_domain"})
     assert response.status_code == 200
     response = response.json()
     assert response["name"] == "test_domain"
     assert response["databases"] == []
     assert len(response["domain_id"]) == 36
 
-    response = client.post("/databases", json={"name": "test_database", "domain_id": response["domain_id"]})
+    time.sleep(1) # Wait for Elasticsearch to index the document
+
+    response = test_client.post("/databases", json={"name": "test_database", "domain_id": response["domain_id"]})
     assert response.status_code == 200
     response = response.json()
     assert response["name"] == "test_database"

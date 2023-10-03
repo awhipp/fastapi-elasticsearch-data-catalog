@@ -39,8 +39,6 @@ class Database(BaseModel):
         else:
             raise HTTPException(status_code=500, detail=f"Found multiple domains with id: {self.domain_id}")
     
-        domain = domain_search(domain_id=self.domain_id)
-        domain = domain[0]
         domain['databases'].append(new_database)  # Cannot cast to Domain model because of circular dependency
         logger.info(domain)
         es.update_document(document_id=self.domain_id, document=domain)
