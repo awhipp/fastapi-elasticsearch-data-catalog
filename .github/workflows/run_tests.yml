@@ -40,7 +40,7 @@ jobs:
 
       - name: Run tests
         run: |
-          python -m poetry run python -m pytest --disable-warnings -xv
+          python -m poetry run python -m pytest --cov=tests --cov-report term-missing --cov-report=xml:coverage.xml --disable-warnings -xv
 
       - name: Pytest coverage comment
         uses: MishaKav/pytest-coverage-comment@main
