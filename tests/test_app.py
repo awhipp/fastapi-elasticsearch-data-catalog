@@ -1,3 +1,7 @@
+import os
+
+os.environ['WAIT_FOR_ELASTICSEARCH'] = 'true'
+
 import app
 from services.ElasticsearchService import ElasticsearchService
 

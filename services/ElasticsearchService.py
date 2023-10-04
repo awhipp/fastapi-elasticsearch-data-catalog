@@ -1,7 +1,9 @@
 from elasticsearch import Elasticsearch
+import time
 from elasticsearch.exceptions import ConnectionError as ElasticsearchConnectionError
 from fastapi import HTTPException
 
+import os
 from services.Logger import get_logger
 logger = get_logger(__name__)
 
@@ -17,20 +19,38 @@ class ElasticsearchService:
             cls._instance.connect(**kwargs)
         return cls._instance
 
-    def wait_for_elastic_search(self, timeout=60):
+    def wait_for_elastic_search(self, timeout=5):
         """
         Wait for ElasticSearch to start up
         """
-        self.client.cluster.health(
-            wait_for_status='green',
-            timeout=f'{timeout}s'
-        )
+        logger.info("Waiting for Elasticsearch to start up")
+
+        attempts = 1
+
+        while attempts < 12:
+            try:
+                self.client.cluster.health(
+                    wait_for_status='yellow',
+                    timeout=f'{timeout}s'
+                )
+                logger.info("Elasticsearch is up")
+                break
+            except ElasticsearchConnectionError:
+                logger.info("Elasticsearch is down")
+                attempts += 1
+                time.sleep(timeout)
+
 
     def connect(self, **kwargs):
         '''Connects to Elasticsearch client'''
         hosts = kwargs.get('hosts', ["http://localhost:9200"])
         self.client = Elasticsearch(hosts=hosts)
-        self.wait_for_elastic_search()
+
+        wait_for_elastic = os.environ.get('WAIT_FOR_ELASTICSEARCH', 'false')
+        wait_for_elastic = wait_for_elastic.lower() == 'true'
+        if wait_for_elastic:
+            self.wait_for_elastic_search()
+
         logger.info(f"Elasticsearch client connected to hosts: {hosts}")
         self.create_index_if_not_exists()
 

@@ -10,7 +10,7 @@ poetry install
 
 ## Usage
 
-Start Elasticsearch and Kibana
+Start Elasticsearch
 
 ```bash
 docker-compose up -d
@@ -21,4 +21,10 @@ Start the application
 ```bash
 poetry shell
 python app.py
+```
+
+Test the application
+
+```bash
+pytest
 ```

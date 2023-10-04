@@ -15,9 +15,18 @@ jobs:
     steps:
         
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
-      - name: Build the stack (elasticsearch, etc)
-        run: docker-compose up -d
+      - name: Configure sysctl limits
+        run: |
+            sudo swapoff -a
+            sudo sysctl -w vm.swappiness=1
+            sudo sysctl -w fs.file-max=262144
+            sudo sysctl -w vm.max_map_count=262144
+
+      - name: Runs Elasticsearch
+        uses: elastic/elastic-github-actions/elasticsearch@master
+        with:
+            stack-version: 8.10.2
+            security-enabled: false
       
       - uses: actions/setup-python@v3
         with:
