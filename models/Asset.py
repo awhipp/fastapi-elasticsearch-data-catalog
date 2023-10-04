@@ -62,17 +62,32 @@ class Asset(BaseModel):
         es.delete_document(document_id=self.asset_id)
 
     @staticmethod
-    def search(asset_id: str):
+    def find_one(asset_id: str, asset_type: str = None):
         '''
         Searches for an asset by id and returns it
         '''
-        # TODO add ability to search by name
-        # TODO further filter by asset type
         query = {
-            "match": {
-                "id": asset_id
+                "bool": {
+                    "must": [
+                        {
+                            "match": {
+                                "_id": asset_id
+                            }
+                        }
+                    ]
+                }
             }
-        }
+        if asset_type is not None:
+            query["bool"]["must"].append(
+                {
+                    "match": {
+                        "asset_type": asset_type
+                    }
+                }
+            )
         results = es.search(index_name="data_catalog", query=query)
-        logger.info(f"Found {len(results)} assets with name: {asset_id}")
-        return results
+        
+        if len(results) == 0:
+            return None
+        else:
+            return results[0]

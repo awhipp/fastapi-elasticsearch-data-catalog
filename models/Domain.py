@@ -28,9 +28,10 @@ class Domain(Asset):
         if parent_id is not None:
             raise HTTPException(status_code=400, detail=f"Domains cannot have parents")
 
-        if len(self.search(self.asset_id)) > 0:
-            raise HTTPException(status_code=400, detail=f"Domain with id: {self.asset_id} already exists")
-        else:
-            es.insert_new_document(index_name="data_catalog", document_id=self.asset_id, document=new_domain)
+        domain_check = self.find_one(asset_id=self.asset_id, asset_type="domain")
 
+        if domain_check is not None:
+            raise HTTPException(status_code=400, detail=f"Domain with id: {self.asset_id} already exists")
+            
+        es.insert_new_document(index_name="data_catalog", document_id=self.asset_id, document=new_domain)
         return new_domain

@@ -66,7 +66,8 @@ class ElasticsearchService:
             response = self.client.index(
                 index=index_name,
                 id=document_id,
-                document=document
+                document=document,
+                refresh='wait_for'
             )
             return response
         except Exception as e:
@@ -83,7 +84,8 @@ class ElasticsearchService:
             response = self.client.update(
                 index=index_name,
                 id=document_id,
-                doc=document
+                doc=document,
+                refresh='wait_for'
             )
             logger.info(f"Updated document with id: {document_id}")
             logger.info(response)
@@ -99,7 +101,8 @@ class ElasticsearchService:
         try:
             response = self.client.delete(
                 index=index_name,
-                id=document_id
+                id=document_id,
+                refresh='wait_for'
             )
             logger.info(f"Deleted document with id: {document_id}")
             logger.info(response)

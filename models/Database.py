@@ -26,22 +26,19 @@ class Database(Asset):
         self.asset_id = str(uuid4())
         new_database = self.model_dump()
 
-        domain = self.search(asset_id=parent_id)
+        domain = self.find_one(asset_id=parent_id, asset_type="domain")
 
-        if len(domain) == 0:
+        if domain is None:
             raise HTTPException(status_code=404, detail=f"Domain with id: {parent_id} not found")
-        elif len(domain) == 1:
-            domain = domain[0]
-            for db in domain['databases']: # Cannot cast to Domain model because of circular dependency
-                if db['name'] == self.name:
-                    raise HTTPException(status_code=400, detail=f"Database with name: {self.name} already exists in domain: {domain['asset_id']}")
-        else:
-            raise HTTPException(status_code=500, detail=f"Found multiple domains with id: {self.asset_id}")
+        
+        for db in domain['children']: # Cannot cast to Domain model because of circular dependency
+            if db['name'] == self.name:
+                raise HTTPException(status_code=400, detail=f"Database with name: {self.name} already exists in domain: {domain['asset_id']}")
     
-        domain['children'].append(new_database)  # Cannot cast to Domain model because of circular dependency
-        logger.info(domain)
-        es.update_document(document_id=self.asset_id, document=domain)
+        domain['children'].append(self.asset_id)  # Cannot cast to Domain model because of circular dependency
+        es.insert_new_document(index_name="data_catalog", document_id=self.asset_id, document=new_database)
+        es.update_document(document_id=domain['asset_id'], document=domain)
         logger.info(f"Added database: {self.name} to domain: {domain['name']}")
-
+        
         return new_database
     

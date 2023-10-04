@@ -3,6 +3,7 @@ from fastapi import FastAPI, HTTPException, Query
 from models.Asset import Asset
 from models.Domain import Domain
 from models.Database import Database
+from models.Table import Table
 # Create a FastAPI app
 app = FastAPI()
 
@@ -30,16 +31,14 @@ async def search_domains(
 
     if asset_id != "" or asset_id is not None:
         logger.info(f"Searching for domain with id: {asset_id}")
-        results = Asset.search(asset_id=asset_id)
+        result = Asset.find_one(asset_id=asset_id, asset_type="domain")
     else:
         raise HTTPException(status_code=400, detail="Domain ID cannot be None")
     
-    if len(results) == 0:
+    if result is None:
         raise HTTPException(status_code=404, detail=f"Domain with id: {asset_id} not found")
-    elif len(results) > 1:
-        raise HTTPException(status_code=500, detail=f"Found multiple domains wit hid: {asset_id}")
     
-    return results[0]
+    return result
 
 @app.post("/databases", response_model=Database)
 async def create_databases(database: Database):
@@ -58,13 +57,38 @@ async def search_databases(
     '''
     if asset_id != "" or asset_id is not None:
         logger.info(f"Searching for database with database_id: {asset_id}")
-        results = Asset.search(asset_id=asset_id)
-        if len(results) == 0:
+        result = Asset.find_one(asset_id=asset_id, asset_type="database")
+        if result is None:
             raise HTTPException(status_code=404, detail=f"Database with database_id: {asset_id} not found")
     else:
         raise HTTPException(status_code=400, detail="Database ID cannot be None")
     
-    return results
+    return result
+
+@app.post("/tables", response_model=Table)
+async def create_table(table: Table):
+    '''
+    Creates a table and returns it
+    '''
+    logger.info(f"Creating table with name: {table.name} and table id: {table.parent_id}")
+    return table.create(parent_id=table.parent_id)
+
+@app.get("/tables", response_model=Table)
+async def search_tables(
+    asset_id: str = Query(default="", description="Search id for table name")
+):
+    '''
+    Searches for a table by name and returns it
+    '''
+    if asset_id != "" or asset_id is not None:
+        logger.info(f"Searching for table with table_id: {asset_id}")
+        result = Asset.find_one(asset_id=asset_id, asset_type="table")
+        if result is None:
+            raise HTTPException(status_code=404, detail=f"Table with table_id: {asset_id} not found")
+    else:
+        raise HTTPException(status_code=400, detail="Table ID cannot be None")
+    
+    return result
 
 if __name__ == "__main__":
     # uvicorn app:app --host 0.0.0.0 --port 8000 --reload
