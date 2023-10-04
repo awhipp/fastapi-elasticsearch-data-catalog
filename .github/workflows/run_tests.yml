@@ -45,7 +45,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m poetry install
+          pwd
+          ls -la
+          python -m poetry -vv install
 
       - name: Run tests
         run: |
