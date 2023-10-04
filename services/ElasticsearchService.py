@@ -1,5 +1,5 @@
-import time
 from elasticsearch import Elasticsearch
+from elasticsearch.exceptions import ConnectionError as ElasticsearchConnectionError
 from fastapi import HTTPException
 
 from services.Logger import get_logger
@@ -30,7 +30,7 @@ class ElasticsearchService:
                     timeout='5s'
                 )
                 break
-            except ConnectionError:
+            except ElasticsearchConnectionError:
                 logger.info(f"Waiting for Elasticsearch client to connect... Attempt #{attempts}")
 
     def connect(self, **kwargs):
