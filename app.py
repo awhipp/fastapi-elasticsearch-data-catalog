@@ -4,6 +4,8 @@ from models.Asset import Asset
 from models.Domain import Domain
 from models.Database import Database
 from models.Table import Table
+from models.Column import Column
+
 # Create a FastAPI app
 app = FastAPI()
 
@@ -70,7 +72,7 @@ async def create_table(table: Table):
     '''
     Creates a table and returns it
     '''
-    logger.info(f"Creating table with name: {table.name} and table id: {table.parent_id}")
+    logger.info(f"Creating table with name: {table.name} and database id: {table.parent_id}")
     return table.create(parent_id=table.parent_id)
 
 @app.get("/tables", response_model=Table)
@@ -87,6 +89,31 @@ async def search_tables(
             raise HTTPException(status_code=404, detail=f"Table with table_id: {asset_id} not found")
     else:
         raise HTTPException(status_code=400, detail="Table ID cannot be None")
+    
+    return result
+
+@app.post("/columns", response_model=Column)
+async def create_column(column: Column):
+    '''
+    Creates a column and returns it
+    '''
+    logger.info(f"Creating column with name: {column.name} and table id: {column.parent_id}")
+    return column.create(parent_id=column.parent_id, d_type=column.data_type)
+
+@app.get("/columns", response_model=Column)
+async def search_column(
+    asset_id: str = Query(default="", description="Search id for column name")
+):
+    '''
+    Searches for a column by name and returns it
+    '''
+    if asset_id != "" or asset_id is not None:
+        logger.info(f"Searching for column with table_id: {asset_id}")
+        result = Asset.find_one(asset_id=asset_id, asset_type="column")
+        if result is None:
+            raise HTTPException(status_code=404, detail=f"Column with column_id: {asset_id} not found")
+    else:
+        raise HTTPException(status_code=400, detail="Column ID cannot be None")
     
     return result
 

@@ -9,7 +9,7 @@ logger = get_logger(__name__)
 # Initialize an Elasticsearch client
 es = ElasticsearchService(hosts=["http://localhost:9200"])
 
-# Create a Pydantic model for the domain
+# Create a Pydantic model for the database
 class Database(Asset):
     '''
     Pydantic model for a database
