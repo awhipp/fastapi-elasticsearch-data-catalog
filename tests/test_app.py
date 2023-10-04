@@ -70,6 +70,37 @@ def test_e2e(test_client):
     assert create_table["parent_id"] == create_database["asset_id"]
 
     ###
+    # Create Column for Table
+    ###
+    create_column = test_client.post(
+        "/columns",
+        json={
+            "name": "test_column", 
+            "parent_id": create_table["asset_id"],
+            "data_type": "string"
+        }
+    )
+    assert create_column.status_code == 200
+    create_column = create_column.json()
+    assert create_column["name"] == "test_column"
+    assert len(create_column["asset_id"]) == 36
+    assert create_column["asset_id"] == create_column["asset_id"]
+    assert create_column["parent_id"] == create_table["asset_id"]
+    assert create_column["data_type"] == "STRING"
+
+    ###
+    # Search for Column and Ensure Data Type
+    ###
+    search_column = test_client.get("/columns", params={"asset_id": create_column["asset_id"]})
+    assert search_column.status_code == 200
+    search_column = search_column.json()
+    assert search_column["name"] == "test_column"
+    assert len(search_column["asset_id"]) == 36
+    assert search_column["asset_id"] == search_column["asset_id"]
+    assert search_column["parent_id"] == create_table["asset_id"]
+    assert search_column["data_type"] == "STRING"
+
+    ###
     # Search for Table and Ensure was Updated
     ###
     search_table = test_client.get("/tables", params={"asset_id": create_table["asset_id"]})
@@ -79,7 +110,7 @@ def test_e2e(test_client):
     assert len(search_table["asset_id"]) == 36
     assert search_table["asset_id"] == search_table["asset_id"]
     assert search_table["parent_id"] == create_database["asset_id"]
-    assert search_table["children"] == []
+    assert search_table["children"] == [create_column["asset_id"]]
 
     ###
     # Search for Database and Ensure was Updated

@@ -9,7 +9,7 @@ logger = get_logger(__name__)
 # Initialize an Elasticsearch client
 es = ElasticsearchService(hosts=["http://localhost:9200"])
 
-# Create a Pydantic model for the domain
+# Create a Pydantic model for the Table
 class Table(Asset):
     '''
     Pydantic model for a table
@@ -31,8 +31,8 @@ class Table(Asset):
         if database is None:
             raise HTTPException(status_code=404, detail=f"Database with id: {parent_id} not found")
         
-        for db in database['children']: # Cannot cast to Domain model because of circular dependency
-            if db['name'] == self.name:
+        for table in database['children']: # Cannot cast to Domain model because of circular dependency
+            if table['name'] == self.name:
                 raise HTTPException(status_code=400, detail=f"Table with name: {self.name} already exists in database: {database['asset_id']}")
     
         database['children'].append(self.asset_id)  # Cannot cast to Domain model because of circular dependency
