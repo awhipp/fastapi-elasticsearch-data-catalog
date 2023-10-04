@@ -90,6 +90,22 @@ class ElasticsearchService:
             return response
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error updating document in Elasticsearch index: {str(e)}")
+        
+    def delete_document(self, index_name="data_catalog", document_id=None):
+        '''Deletes a document in an index'''
+        if document_id is None:
+            raise HTTPException(status_code=400, detail="Document ID cannot be None")
+
+        try:
+            response = self.client.delete(
+                index=index_name,
+                id=document_id
+            )
+            logger.info(f"Deleted document with id: {document_id}")
+            logger.info(response)
+            return response
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error deleting document in Elasticsearch index: {str(e)}")
 
 # Usage example:
 # es = ElasticsearchSingleton(hosts=["http://your-elasticsearch-host:9200"])

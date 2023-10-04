@@ -18,18 +18,24 @@ def test_client():
     yield client
 
 def test_e2e(test_client):
-    response = test_client.post("/domains", json={"name": "test_domain"})
-    assert response.status_code == 200
-    response = response.json()
-    assert response["name"] == "test_domain"
-    assert response["databases"] == []
-    assert len(response["domain_id"]) == 36
+    domain_response = test_client.post("/domains", json={"name": "test_domain"})
+    assert domain_response.status_code == 200
+    domain_response = domain_response.json()
+    assert domain_response["name"] == "test_domain"
+    assert domain_response["children"] == []
+    assert len(domain_response["asset_id"]) == 36
 
     time.sleep(1) # Wait for Elasticsearch to index the document
 
-    response = test_client.post("/databases", json={"name": "test_database", "domain_id": response["domain_id"]})
-    assert response.status_code == 200
-    response = response.json()
-    assert response["name"] == "test_database"
-    assert len(response["database_id"]) == 36
-    assert response["domain_id"] == response["domain_id"]
+    database_response = test_client.post(
+        "/databases",
+        json={
+            "name": "test_database", 
+            "parent_id": domain_response["asset_id"]
+        }
+    )
+    assert database_response.status_code == 200
+    database_response = database_response.json()
+    assert database_response["name"] == "test_database"
+    assert len(database_response["database_id"]) == 36
+    assert database_response["asset_id"] == database_response["domain_id"]

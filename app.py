@@ -1,10 +1,8 @@
 import uvicorn
 from fastapi import FastAPI, HTTPException, Query
+from models.Asset import Asset
 from models.Domain import Domain
 from models.Database import Database
-from utilities.DomainHelpers import search as domain_search
-from utilities.DatabaseHelpers import search as database_search
-
 # Create a FastAPI app
 app = FastAPI()
 
@@ -20,31 +18,27 @@ async def create_domain(domain: Domain):
     Creates a domain and returns it
     '''
     logger.info(f"Creating domain with name: {domain.name}")
-    return domain.create_domain()
+    return domain.create()
 
 @app.get("/domains", response_model=Domain)
 async def search_domains(
-    name: str = Query(default="", description="Search name for domains"),
-    domain_id: str = Query(default="", description="Search id for domains")
+    asset_id: str = Query(default="", description="Search id for domains")
 ):
     '''
     Searches for a domain by name and returns it
     '''
 
-    if domain_id != "" and name != "":
-        raise HTTPException(status_code=400, detail="Name or id must be provided")
-    elif domain_id != "":
-        logger.info(f"Searching for domain with id: {domain_id}")
-        query = domain_id
-        results = domain_search(domain_id=query)
+    if asset_id != "" or asset_id is not None:
+        logger.info(f"Searching for domain with id: {asset_id}")
+        results = Asset.search(asset_id=asset_id)
     else:
-        logger.info(f"Searching for domain with name: {name}")
-        query = name
-        results = domain_search(name=query)
+        raise HTTPException(status_code=400, detail="Domain ID cannot be None")
+    
     if len(results) == 0:
-        raise HTTPException(status_code=404, detail=f"Domain with name/id: {query} not found")
+        raise HTTPException(status_code=404, detail=f"Domain with id: {asset_id} not found")
     elif len(results) > 1:
-        raise HTTPException(status_code=500, detail=f"Found multiple domains with name/id: {query}")
+        raise HTTPException(status_code=500, detail=f"Found multiple domains wit hid: {asset_id}")
+    
     return results[0]
 
 @app.post("/databases", response_model=Database)
@@ -52,29 +46,23 @@ async def create_databases(database: Database):
     '''
     Creates a domain and returns it
     '''
-    logger.info(f"Creating database with name: {database.name} and domain_id: {database.domain_id}")
-    return database.create_database()
+    logger.info(f"Creating database with name: {database.name} and domain_id: {database.parent_id}")
+    return database.create(parent_id=database.parent_id)
 
 @app.get("/databases", response_model=Database)
 async def search_databases(
-    database_id: str = Query(default="", description="Search id for database name"),
-    name: str = Query(default="", description="Search name for database name")
+    asset_id: str = Query(default="", description="Search id for database name")
 ):
     '''
     Searches for a database by name and returns it
     '''
-    if database_id != "" and name != "":
-        raise HTTPException(status_code=400, detail="Name or id must be provided")
-    elif database_id != "":
-        logger.info(f"Searching for database with database_id: {database_id}")
-        results = database_search(database_id=database_id)
+    if asset_id != "" or asset_id is not None:
+        logger.info(f"Searching for database with database_id: {asset_id}")
+        results = Asset.search(asset_id=asset_id)
         if len(results) == 0:
-            raise HTTPException(status_code=404, detail=f"Database with database_id: {database_id} not found")
+            raise HTTPException(status_code=404, detail=f"Database with database_id: {asset_id} not found")
     else:
-        logger.info(f"Searching for database with name: {name}")
-        results = database_search(name=name)
-        if len(results) == 0:
-            raise HTTPException(status_code=404, detail=f"Database with name: {name} not found")
+        raise HTTPException(status_code=400, detail="Database ID cannot be None")
     
     return results
 
