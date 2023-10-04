@@ -1,9 +1,7 @@
 from services.ElasticsearchService import ElasticsearchService
-from pydantic import BaseModel, UUID4
+from models.Asset import Asset
 from fastapi import HTTPException
 from uuid import uuid4
-
-from models.Database import Database
 
 from services.Logger import get_logger
 logger = get_logger(__name__)
@@ -13,50 +11,27 @@ logger = get_logger(__name__)
 es = ElasticsearchService(hosts=["http://localhost:9200"])
 
 # Create a Pydantic model for the domain
-class Domain(BaseModel):
+class Domain(Asset):
     '''
     Pydantic model for a domain
     '''
-    name: str
-    domain_id: UUID4 = None
-    databases: list[Database] = []
+    asset_type: str = "domain"
+    parent_id: str = ""
 
-    def create_domain(self):
+    def create(self, parent_id=None):
         '''
         Creates a domain and returns it
         '''
-        self.domain_id = uuid4()
+        self.asset_id = str(uuid4())
         new_domain = self.model_dump()
+        
+        if parent_id is not None:
+            raise HTTPException(status_code=400, detail=f"Domains cannot have parents")
 
-        if len(self.search(self.name)) > 0:
-            raise HTTPException(status_code=400, detail=f"Domain with name: {self.name} already exists")
-        else:
-            es.insert_new_document(index_name="data_catalog", document_id=self.domain_id, document=new_domain)
+        domain_check = self.find_one(asset_id=self.asset_id, asset_type="domain")
 
+        if domain_check is not None:
+            raise HTTPException(status_code=400, detail=f"Domain with id: {self.asset_id} already exists")
+            
+        es.insert_new_document(index_name="data_catalog", document_id=self.asset_id, document=new_domain)
         return new_domain
-    
-    def add(self):
-        '''
-        Adds a domain to Elasticsearch
-        '''
-        es.client.index(
-            index="data_catalog",
-            id=self.domain_id,
-            document=self.model_dump()
-        )
-        logger.info(f"Added domain: {self.name}")
-        return self
-    
-    @staticmethod
-    def search(id: str):
-        '''
-        Searches for a domain by name and returns it
-        '''
-        query = {
-            "match": {
-                "id": id
-            }
-        }
-        results = es.search(index_name="data_catalog", query=query)
-        logger.info(f"Found {len(results)} domains with name: {id}")
-        return results
