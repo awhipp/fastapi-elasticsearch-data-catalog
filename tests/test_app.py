@@ -1,5 +1,4 @@
 import app
-import time
 from services.ElasticsearchService import ElasticsearchService
 
 import pytest

@@ -1,3 +1,4 @@
+import time
 from elasticsearch import Elasticsearch
 from fastapi import HTTPException
 
@@ -16,10 +17,27 @@ class ElasticsearchService:
             cls._instance.connect(**kwargs)
         return cls._instance
 
+    def wait_for_elastic_search(self):
+        """
+        Wait for ElasticSearch to start up
+        """
+        attempts = 0
+        while attempts < 12: # 12 * 5s = 60s
+            try:
+                attempts += 1
+                self.client.cluster.health(
+                    wait_for_status='yellow',
+                    timeout='5s'
+                )
+                break
+            except ConnectionError:
+                logger.info(f"Waiting for Elasticsearch client to connect... Attempt #{attempts}")
+
     def connect(self, **kwargs):
         '''Connects to Elasticsearch client'''
         hosts = kwargs.get('hosts', ["http://localhost:9200"])
         self.client = Elasticsearch(hosts=hosts)
+        self.wait_for_elastic_search()
         logger.info(f"Elasticsearch client connected to hosts: {hosts}")
         self.create_index_if_not_exists()
 
