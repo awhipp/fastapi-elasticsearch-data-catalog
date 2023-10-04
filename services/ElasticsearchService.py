@@ -17,21 +17,14 @@ class ElasticsearchService:
             cls._instance.connect(**kwargs)
         return cls._instance
 
-    def wait_for_elastic_search(self):
+    def wait_for_elastic_search(self, timeout=60):
         """
         Wait for ElasticSearch to start up
         """
-        attempts = 0
-        while attempts < 12: # 12 * 5s = 60s
-            try:
-                attempts += 1
-                self.client.cluster.health(
-                    wait_for_status='yellow',
-                    timeout='5s'
-                )
-                break
-            except ElasticsearchConnectionError:
-                logger.info(f"Waiting for Elasticsearch client to connect... Attempt #{attempts}")
+        self.client.cluster.health(
+            wait_for_status='green',
+            timeout=f'{timeout}s'
+        )
 
     def connect(self, **kwargs):
         '''Connects to Elasticsearch client'''
