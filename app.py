@@ -14,7 +14,6 @@ from services.Logger import get_logger
 logger = get_logger(__name__)
 
 # Domains
-# TODO breakout into its own controller 
 @app.post("/domains", response_model=Domain)
 async def create_domain(domain: Domain):
     '''
@@ -116,6 +115,26 @@ async def search_column(
         raise HTTPException(status_code=400, detail="Column ID cannot be None")
     
     return result
+
+@app.post("/ingest_full_domain")
+async def ingest_full_domain(full_catalog: dict):
+    '''
+    Ingests the full catalog
+    '''
+    response = []
+    for domain in full_catalog:
+        domain_asset = Domain(name=domain)
+        response.append(domain_asset.create())
+        for database in full_catalog[domain]:
+            database_asset = Database(name=database)
+            response.append(database_asset.create(parent_id=domain_asset.asset_id))
+            for table in full_catalog[domain][database]:
+                table_asset = Table(name=table)
+                response.append(table_asset.create(parent_id=database_asset.asset_id))
+                for column in full_catalog[domain][database][table]:
+                    column_asset = Column(name=column, d_type=full_catalog[domain][database][table][column])
+                    response.append(column_asset.create(parent_id=table_asset.asset_id, d_type=column_asset.data_type))
+
 
 if __name__ == "__main__":
     # uvicorn app:app --host 0.0.0.0 --port 8000 --reload

@@ -1,25 +1,3 @@
-import os
-
-os.environ['WAIT_FOR_ELASTICSEARCH'] = 'true'
-
-import app
-from services.ElasticsearchService import ElasticsearchService
-
-import pytest
-
-from fastapi.testclient import TestClient
-
-@pytest.fixture(autouse=True)
-def ensure_elasticsearch():
-    es = ElasticsearchService(hosts=["http://localhost:9200"])
-    yield es
-    es.delete_index()
-
-@pytest.fixture()
-def test_client():
-    client = TestClient(app.app)
-    yield client
-
 def test_e2e(test_client):
     '''
     Tests the end to end flow of creating a domain and database
@@ -87,6 +65,7 @@ def test_e2e(test_client):
     assert create_column["asset_id"] == create_column["asset_id"]
     assert create_column["parent_id"] == create_table["asset_id"]
     assert create_column["data_type"] == "STRING"
+    assert create_column["metadata"] == {}
 
     ###
     # Search for Column and Ensure Data Type
@@ -133,3 +112,25 @@ def test_e2e(test_client):
     assert search_domain["name"] == "test_domain"
     assert search_domain["children"] == [search_database["asset_id"]]
     assert len(search_domain["asset_id"]) == 36
+
+def test_payload_e2e(test_client):
+    '''
+    Tests the end to end flow of creating a domain and database
+    '''
+    example_payload = {
+        "test_domain": {
+            "database1": {
+                "table1": {
+                    'id': 'integer', 
+                    'age': 'integer', 
+                    'salary': 'numeric', 
+                    'is_active': 'boolean', 
+                    'name': 'character varying'
+                }
+            }
+        }
+    }
+
+    test_client.post("/ingest_full_domain", json=example_payload)
+
+    # ! TODO add search by name

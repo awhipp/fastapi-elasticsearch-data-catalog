@@ -30,6 +30,7 @@ class Column(Asset):
     '''
     asset_type: str = "column"
     data_type: str = None
+    metadata: dict = {}
 
     def create(self, parent_id: str, d_type: str):
         '''
