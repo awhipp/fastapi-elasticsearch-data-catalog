@@ -8,6 +8,7 @@ import uvicorn
 from fastapi import FastAPI
 
 from routes.Ingest import bp as ingest_api
+from routes.Search import bp as search_api
 from routes.Domain import bp as domain_api
 from routes.Database import bp as database_api
 from routes.Table import bp as table_api
@@ -20,6 +21,7 @@ logger = get_logger(__name__)
 
 # Mount the API endpoints
 app.mount("/ingest/", ingest_api)
+app.mount("/search/", search_api)
 app.mount("/domains/", domain_api)
 app.mount("/databases/", database_api)
 app.mount("/tables/", table_api)

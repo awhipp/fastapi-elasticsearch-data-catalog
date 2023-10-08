@@ -1,3 +1,4 @@
+from uuid import uuid4
 def test_e2e(test_client):
     '''
     Tests the end to end flow of creating a domain and database
@@ -176,3 +177,34 @@ def test_ingest_full_source(test_client):
     assert len(ingest_full_source[7]["asset_id"]) == 36
     assert ingest_full_source[7]["parent_id"] == ingest_full_source[2]["asset_id"]
     assert ingest_full_source[7]["data_type"] == "CHARACTER VARYING"
+
+def test_search_names(test_client):
+    '''
+    Tests the ability to search based on names and getting documents back
+    '''
+    prefix = str(uuid4().hex[0:6])
+    example_payload = {
+        f"{prefix}1": {
+            f"{prefix}12": {
+                f"{prefix}123": {
+                    f"{prefix}1234": 'integer', 
+                    f"{prefix}12345": 'integer', 
+                    f"{prefix}123456": 'numeric', 
+                    f"{prefix}1234567": 'boolean', 
+                    f"{prefix}12345678": 'character varying'
+                }
+            }
+        }
+    }
+
+    ingest_full_source = test_client.post("/ingest/full_source", json=example_payload)
+    assert ingest_full_source.status_code == 200
+
+    suffix = ""
+    for i in range(1,9):
+        suffix += str(i)
+        search_names = test_client.get("/search/names", params={"value": f"{prefix}{suffix}"})
+        assert search_names.status_code == 200
+        search_names = search_names.json()
+        assert len(search_names) == 9-i
+
