@@ -30,7 +30,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./postgresql.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./tests/connector/postgresql.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - default
 

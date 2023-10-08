@@ -56,7 +56,7 @@ class ElasticsearchService:
 
     def create_index_if_not_exists(self, index_name="data_catalog"):
         '''Creates an index if it doesn't exist'''
-        if not self.client.indices.exists(index=index_name):
+        if not self.client.indices.exists(index=index_name).body:
             self.client.indices.create(index=index_name)
             logger.info(f"Created index: {index_name}")
         else:
@@ -64,9 +64,23 @@ class ElasticsearchService:
 
     def delete_index(self, index_name="data_catalog"):
         '''Deletes an index'''
-        if self.client.indices.exists(index=index_name):
+        if self.client.indices.exists(index=index_name).body:
             self.client.indices.delete(index=index_name)
             logger.info(f"Deleted index: {index_name}")
+        else:
+            logger.info(f"Index does not exist: {index_name}")
+
+    def remove_all_documents(self, index_name="data_catalog"):
+        '''Removes all documents from an index'''
+        if self.client.indices.exists(index=index_name).body:
+            self.client.delete_by_query(
+                index=index_name,
+                query={
+                        "match_all": {}
+                },
+                refresh='true'
+            )
+            logger.info(f"Removed all documents from index: {index_name}")
         else:
             logger.info(f"Index does not exist: {index_name}")
 

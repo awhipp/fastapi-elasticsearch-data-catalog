@@ -113,7 +113,7 @@ def test_e2e(test_client):
     assert search_domain["children"] == [search_database["asset_id"]]
     assert len(search_domain["asset_id"]) == 36
 
-def test_payload_e2e(test_client):
+def test_ingest_full_source(test_client):
     '''
     Tests the end to end flow of creating a domain and database
     '''
@@ -131,6 +131,48 @@ def test_payload_e2e(test_client):
         }
     }
 
-    test_client.post("/ingest_full_domain", json=example_payload)
+    ingest_full_source = test_client.post("/ingest/full_source", json=example_payload)
+    assert ingest_full_source.status_code == 200
+    ingest_full_source = ingest_full_source.json()
+    assert len(ingest_full_source) == 8 # 1 domain, 1 database, 1 table, 5 columns
 
-    # ! TODO add search by name
+    # Domain Test
+    assert ingest_full_source[0]["name"] == "test_domain"
+    assert ingest_full_source[0]["children"] == []
+    assert len(ingest_full_source[0]["asset_id"]) == 36
+
+    # Database Test
+    assert ingest_full_source[1]["name"] == "database1"
+    assert len(ingest_full_source[1]["asset_id"]) == 36
+    assert ingest_full_source[1]["parent_id"] == ingest_full_source[0]["asset_id"]
+
+    # Table Test
+    assert ingest_full_source[2]["name"] == "table1"
+    assert len(ingest_full_source[2]["asset_id"]) == 36
+    assert ingest_full_source[2]["parent_id"] == ingest_full_source[1]["asset_id"]
+
+    # Column Tests
+    assert ingest_full_source[3]["name"] == "id"
+    assert len(ingest_full_source[3]["asset_id"]) == 36
+    assert ingest_full_source[3]["parent_id"] == ingest_full_source[2]["asset_id"]
+    assert ingest_full_source[3]["data_type"] == "INTEGER"
+
+    assert ingest_full_source[4]["name"] == "age"
+    assert len(ingest_full_source[4]["asset_id"]) == 36
+    assert ingest_full_source[4]["parent_id"] == ingest_full_source[2]["asset_id"]
+    assert ingest_full_source[4]["data_type"] == "INTEGER"
+
+    assert ingest_full_source[5]["name"] == "salary"
+    assert len(ingest_full_source[5]["asset_id"]) == 36
+    assert ingest_full_source[5]["parent_id"] == ingest_full_source[2]["asset_id"]
+    assert ingest_full_source[5]["data_type"] == "NUMERIC"
+
+    assert ingest_full_source[6]["name"] == "is_active"
+    assert len(ingest_full_source[6]["asset_id"]) == 36
+    assert ingest_full_source[6]["parent_id"] == ingest_full_source[2]["asset_id"]
+    assert ingest_full_source[6]["data_type"] == "BOOLEAN"
+
+    assert ingest_full_source[7]["name"] == "name"
+    assert len(ingest_full_source[7]["asset_id"]) == 36
+    assert ingest_full_source[7]["parent_id"] == ingest_full_source[2]["asset_id"]
+    assert ingest_full_source[7]["data_type"] == "CHARACTER VARYING"

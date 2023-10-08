@@ -3,25 +3,11 @@ from models.Asset import Asset
 from fastapi import HTTPException
 from uuid import uuid4
 
-from enum import Enum
-
 from services.Logger import get_logger
 logger = get_logger(__name__)
 
 # Initialize an Elasticsearch client
 es = ElasticsearchService(hosts=["http://localhost:9200"])
-
-class DataType(Enum):
-    '''
-    Enum for data types
-    '''
-    STRING = "string"
-    INTEGER = "integer"
-    FLOAT = "float"
-    DATE = "date"
-    BOOLEAN = "boolean"
-    OBJECT = "object"
-    ARRAY = "array"
 
 # Create a Pydantic model for the column
 class Column(Asset):
@@ -32,20 +18,22 @@ class Column(Asset):
     data_type: str = None
     metadata: dict = {}
 
-    def create(self, parent_id: str, d_type: str):
+    def create(self, parent_id: str = None, d_type: str = None):
         '''
         Creates a table and returns it
         '''
-        if parent_id is None:
+        if parent_id is None and self.parent_id is None:
             raise HTTPException(status_code=400, detail=f"Column with id: {self.asset_id} must have a parent table.")
+        if parent_id is None:
+            parent_id = self.parent_id
         
-        if self.data_type is None:
+        if d_type is None and self.data_type is None:
             raise HTTPException(status_code=400, detail=f"Column with id: {self.asset_id} must have a data type.")
         
-        if not hasattr(DataType, d_type.upper()):
-            raise HTTPException(status_code=400, detail=f"Column with id: {self.asset_id} must have a valid data type.")
-        else:
+        if d_type != None:
             self.data_type = d_type.upper()
+        else:
+            self.data_type = self.data_type.upper()
         
         self.asset_id = str(uuid4())
         new_column = self.model_dump()
@@ -55,8 +43,8 @@ class Column(Asset):
         if table is None:
             raise HTTPException(status_code=404, detail=f"Table with id: {parent_id} not found")
         
-        for column in table['children']: # Cannot cast to Domain model because of circular dependency
-            if column['name'] == self.name:
+        for column_id in table['children']: # Cannot cast to Domain model because of circular dependency
+            if column_id == self.name:
                 raise HTTPException(status_code=400, detail=f"Column with name: {self.name} already exists in Table: {table['asset_id']}")
     
         table['children'].append(self.asset_id)  # Cannot cast to Domain model because of circular dependency

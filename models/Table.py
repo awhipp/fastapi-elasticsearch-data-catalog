@@ -16,12 +16,14 @@ class Table(Asset):
     '''
     asset_type: str = "table"
 
-    def create(self, parent_id: str):
+    def create(self, parent_id: str = None):
         '''
         Creates a table and returns it
         '''
-        if parent_id is None:
+        if parent_id is None and self.parent_id is None:
             raise HTTPException(status_code=400, detail=f"Table with id: {self.asset_id} must have a parent database.")
+        if parent_id is None:
+            parent_id = self.parent_id
         
         self.asset_id = str(uuid4())
         new_table = self.model_dump()
