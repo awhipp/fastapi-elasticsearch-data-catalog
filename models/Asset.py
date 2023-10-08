@@ -1,5 +1,5 @@
 from services.ElasticsearchService import ElasticsearchService
-from pydantic import BaseModel, UUID4
+from pydantic import BaseModel
 from fastapi import HTTPException
 from uuid import uuid4
 from typing import Optional

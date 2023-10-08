@@ -13,7 +13,7 @@ This is a simple data catalog implemented using Elasticsearch and Fast API. It i
 - Delete data assets
 - Update data assets
 - View data asset details
-- (Future TBD) Automatically scan for new data assets based on data sources
+- Automatically scan for new data assets based on data sources using connector architecture
 
 ## Installation
 

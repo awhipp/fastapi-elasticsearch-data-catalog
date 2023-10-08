@@ -11,23 +11,13 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
+
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
-
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: Configure sysctl limits
-        run: |
-            sudo swapoff -a
-            sudo sysctl -w vm.swappiness=1
-            sudo sysctl -w fs.file-max=262144
-            sudo sysctl -w vm.max_map_count=262144
-
-      - name: Runs Elasticsearch
-        uses: elastic/elastic-github-actions/elasticsearch@master
-        with:
-            stack-version: 8.10.2
-            security-enabled: false
+      - name: Build the stack (elasticsearch, etc)
+        run: docker-compose up -d
       
       - uses: actions/setup-python@v3
         with:

@@ -17,6 +17,24 @@ services:
     networks:
       - default
 
+
+  # Test Postgres Setup for Connector
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    command: ["docker-entrypoint.sh", "postgres"]
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./tests/connector/postgresql.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - default
+
+
 networks:
   default:
-    name: elastic
+    name: data_catalog
