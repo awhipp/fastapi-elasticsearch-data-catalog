@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Simple UML Class Diagram</title>
+  <!-- Load JointJS and its dependencies -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jointjs/3.2.0/joint.min.css" integrity="sha512-jbRbA7sm8P3kN9fDTJi2iTKr9mBQra6KOxbi8wr2jXwp730G1l+jGmNRdV6PUDTTrcAHXIq0w3jGpkRRbQQmlw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.4.0/backbone-min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jointjs/3.2.0/joint.min.js" integrity="sha512-HZoV7Eg7cGc3ChWH2M5rEUNaVbL1jRRRv2TUnMR0x5GLCcAqsFuVoETVMs1nhVhS8cIL6QEhyXpShgT7MwLmLA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+    <h1>Example for Demonstration Purposes</h1>
+    <button id="generate_data" onclick="generateData()">Generate Data</button>
+  <div id="uml-diagram"></div>
+
+  <script>
+    // Initialize the paper
+    var paper = new joint.dia.Paper({
+      el: document.getElementById('uml-diagram'),
+      width: window.innerWidth*3,
+      height: window.innerHeight*3,
+      model: new joint.dia.Graph(),
+    });
+  </script>
+
+  <script>
+    
+    function addClass(className, attributes, methods, id, x, y) {
+        size = { width: 200, height: 200 }
+        if (className.indexOf("Domain") >= 0){
+            size = { width: 200, height: 50 }
+        }
+        if (className.indexOf("Database") >= 0){
+            size = { width: 200, height: 100 }
+        }
+        var class1 = new joint.shapes.uml.Class({
+            position: { x: x, y: y },
+            size: size,
+            name: className,
+            attributes: attributes,
+            methods: methods,
+            id: id,
+        });
+        var graph = paper.model;
+        graph.addCells([class1]);
+
+        return class1.id;
+    }
+
+    function addAssociation(source, target) {
+        var link = new joint.shapes.uml.Generalization({
+            source: { id: source },
+            target: { id: target },
+        });
+        var graph = paper.model;
+        graph.addCells([link]);
+    }
+
+    x = {
+        "domain": 0,
+        "database": 0
+    }
+
+    y = {
+        "domain": 0,
+        "database": 100
+    }
+
+    function newX(asset) {
+        return x[asset] += 250;
+    }
+
+    function getY(asset) {
+        return y[asset];
+    }
+
+    function getData() {
+        // Get request to /search/all
+        $.get("/search/all").done(
+            function(data) {
+                for (var i = 0; i < data.length; i++) {
+                    d = data[i];
+                    if (d.asset_type == "domain") {
+                        addClass(
+                            `Domain: ${d.name}`,
+                            [],
+                            [], 
+                            d.asset_id,
+                            newX(d.asset_type),
+                            getY(d.asset_type)
+                        )
+                    }
+                }
+
+                for (var i = 0; i < data.length; i++) {
+                    d = data[i];
+                    console.log(d)
+                    if (d.asset_type == "database") {
+                        addClass(
+                            `Database: ${d.name}`,
+                            [],
+                            [`Parent Domain: ${d.parent_id.substring(0, 8)}...`], 
+                            d.asset_id,
+                            newX(d.asset_type),
+                            getY(d.asset_type)
+                        )
+                        addAssociation(d.asset_id, d.parent_id)
+                    }
+                }
+
+                tables = {}
+                console.log(data);
+
+                for (var i = 0; i < data.length; i++) {
+                    d = data[i];
+                    d["columns"] = []
+                    if (d.asset_type == "table") {
+                        tables[d.asset_id] = d;
+                        console.log(`Table: ${d.name}`)
+                    }
+                }
+
+                for (var i = 0; i < data.length; i++) {
+                    d = data[i];
+                    if (d.asset_type == "column") {
+                        tables[d.parent_id]["columns"].push(d);
+                        console.log(`Column: ${d.name}`)
+                    }
+                }
+                
+                previousParent = Object.keys(tables)[0].parent_id;
+                x = 0;
+                y = 250;
+
+                for (var i = 0; i < Object.keys(tables).length; i++) {
+                    d = tables[Object.keys(tables)[i]];
+                    addLink = false;
+                    // Default x is 0, and y is 250
+                    // Only move x if the parent is different
+                    // If parent is the same increment y by 250, else set back to 250
+                    if (d.parent_id != previousParent) {
+                        x += 250;
+                        y = 250;
+                        addLink = true;
+                    } else {
+                        y += 250;
+                    }
+                    previousParent = d.parent_id;
+
+                    c = []
+                    for (var j = 0; j < d["columns"].length; j++) {
+                        c.push(`${d["columns"][j]["name"]}: ${d["columns"][j]["data_type"]}`)
+                    }
+                    addClass(
+                        `Table: ${d.name}`,
+                        c,
+                        [`Parent Database: ${d.parent_id.substring(0, 8)}...`], 
+                        d.asset_id,
+                        x,
+                        y,
+                    )
+                    if (addLink)
+                        addAssociation(d.asset_id, d.parent_id)
+                    console.log(`Table: ${d.name}`)
+                }
+                
+            }
+        )
+    }
+
+    function generateData() {
+        // Submits a POST request to /ingest/sample_data
+        document.getElementById("generate_data").disabled = true;
+        document.getElementById("generate_data").innerHTML = "Generating Data...";
+        $.post("/ingest/sample_data").done(
+            function(data) {
+                document.getElementById("generate_data").innerHTML = "Done!";
+                console.log(data)
+            }
+        )
+    }
+    
+  </script>
+</body>
+</html>

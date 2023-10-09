@@ -84,7 +84,7 @@ class ElasticsearchService:
         else:
             logger.info(f"Index does not exist: {index_name}")
 
-    def search(self, index_name="data_catalog", query=None):
+    def search(self, index_name="data_catalog", query=None, size=10000):
         '''Searches for a query in an index'''
         if query is None:
             raise HTTPException(status_code=400, detail="Query cannot be None")
@@ -92,7 +92,8 @@ class ElasticsearchService:
         try:
             response = self.client.search(
                 index=index_name,
-                query=query
+                query=query,
+                size=size
             )
             results = [hit["_source"] for hit in response["hits"]["hits"]]
             return results

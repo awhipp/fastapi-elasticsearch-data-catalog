@@ -29,3 +29,16 @@ async def search_names(value: str = Query(default="", description="Search partia
             }
         )
 
+@bp.get("/all")
+async def retrieve_all():
+    '''
+    Retrieve all assets
+    '''
+    logger.info("Retrieving all assets (size 10000)")
+    return es.search(
+        index_name="data_catalog",
+        query={
+                "match_all": {}
+            }
+        )
+    return all

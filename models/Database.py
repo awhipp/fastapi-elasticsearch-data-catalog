@@ -34,7 +34,7 @@ class Database(Asset):
             raise HTTPException(status_code=404, detail=f"Domain with id: {parent_id} not found")
         
         for db in domain['children']: # Cannot cast to Domain model because of circular dependency
-            if db['name'] == self.name:
+            if db == self.name:
                 raise HTTPException(status_code=400, detail=f"Database with name: {self.name} already exists in domain: {domain['asset_id']}")
     
         domain['children'].append(self.asset_id)  # Cannot cast to Domain model because of circular dependency

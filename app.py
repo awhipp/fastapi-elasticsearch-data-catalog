@@ -5,7 +5,9 @@ Main application entry point
 from services.Logger import get_logger
 import uvicorn
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
 
 from routes.Ingest import bp as ingest_api
 from routes.Search import bp as search_api
@@ -26,6 +28,16 @@ app.mount("/domains/", domain_api)
 app.mount("/databases/", database_api)
 app.mount("/tables/", table_api)
 app.mount("/columns/", column_api)
+
+templates = Jinja2Templates(directory="templates")
+
+@app.get("/", response_class=HTMLResponse)
+async def home_visualization(request: Request):
+    '''
+    '''
+    return templates.TemplateResponse("visualize.html", {"request": request})
+
+
 
 if __name__ == "__main__":
     # uvicorn app:app --host 0.0.0.0 --port 8000 --reload
