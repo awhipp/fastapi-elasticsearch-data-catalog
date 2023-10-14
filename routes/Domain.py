@@ -4,6 +4,7 @@ Domain Routes
 
 from models.Asset import Asset
 from models.Domain import Domain
+from models.Database import Database
 
 from services.Logger import get_logger
 logger = get_logger(__name__)
@@ -39,3 +40,19 @@ async def search_domains(
         raise HTTPException(status_code=404, detail=f"Domain with id: {asset_id} not found")
     
     return result
+
+@bp.get("/children", response_model=list[Database])
+async def get_children(
+    parent_asset_id: str = Query(default="", description="Search id for parent domain")
+):
+    '''
+    Searches for a domain by name and returns it
+    '''
+
+    if parent_asset_id != "" or parent_asset_id is not None:
+        logger.info(f"Searching for children of domain with id: {parent_asset_id}")
+        results = Asset.find_children(asset_id=parent_asset_id)
+    else:
+        raise HTTPException(status_code=400, detail="Parent Domain ID cannot be None")
+    
+    return results

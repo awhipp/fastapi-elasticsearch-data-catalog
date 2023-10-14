@@ -113,3 +113,21 @@ class Asset(BaseModel):
                 }
             }
         return es.search(index_name="data_catalog", query=query)    
+
+    @staticmethod
+    def find_children(asset_id: str = None):
+        '''
+        Searches for all children of an asset and returns them
+        '''
+        query = {
+                "bool": {
+                    "must": [
+                        {
+                            "match": {
+                                "parent_id": asset_id
+                            }
+                        }
+                    ]
+                }
+            }
+        return es.search(index_name="data_catalog", query=query)

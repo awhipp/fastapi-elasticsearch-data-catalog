@@ -4,8 +4,9 @@
     <title>Dynamic Dropdowns</title>
 </head>
 <body>
-    <form>
+    <form id="domain_form">
         <select id="domain_dropdown" name="domain_dropdown">
+            <option value="">Select Domain</option>
             {% for domain in domains %}
                 <option value="{{ domain.asset_id }}">{{ domain.name }}</option>
             {% endfor %}
@@ -18,10 +19,14 @@
         <input type="submit" value="Submit" onclick="return false" style="display: none;"/>
     </form>
 
-    <form>
-        <select id="secondDropdown" name="secondDropdown" style="display: none;">
+    <form id="database_form" style="display: none;">
+        <select id="database_dropdown" name="database_dropdown">
             <!-- This dropdown will be initially hidden -->
         </select>
+        <input type="text" id="database_name" name="database_name" placeholder="Database Name" required>
+
+        <input type="button" onclick="add_database()" value="Link Database"/>
+        <input type="submit" value="Submit" onclick="return false" style="display: none;"/>
     </form>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -46,8 +51,33 @@
                 success: function (data) {
                     console.log(data);
                     alert("Domain created successfully");
-                    // Reload with new domain assetId in hash
-                    window.location.href = "/?domain_id=" + data.asset_id;
+                },
+                failure: function (errMsg) {
+                    alert(errMsg);
+                }
+            });
+        }
+
+        function add_database() {
+            var database_name = document.getElementById("database_name").value;
+            if (database_name == "") {
+                alert("Please enter a database name");
+                return;
+            }
+            var data = {
+                name: database_name,
+                parent_id: document.getElementById("domain_dropdown").value
+            };
+            $.ajax({
+                type: "POST",
+                url: "/databases",
+                data: JSON.stringify(data),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (data) {
+                    console.log(data);
+                    alert("Database created successfully");
+                    $("#domain_dropdown").change();
                 },
                 failure: function (errMsg) {
                     alert(errMsg);
@@ -68,28 +98,40 @@
         
         $(document).ready(function () {
             $('#domain_dropdown').on('change', function () {
-                var selectedCategory = $(this).val();
-                var $secondDropdown = $('#secondDropdown');
+                var selected_domain = $(this).val();
+                var $database_dropdown = $('#database_dropdown');
 
                 // Clear and hide the second dropdown
-                $secondDropdown.empty().hide();
+                $database_dropdown.empty().hide();
 
-                if (selectedCategory === 'category1') {
-                    // Populate and show the second dropdown based on Category 1
-                    $secondDropdown.append('<option value="option1">Option 1</option>');
-                    $secondDropdown.append('<option value="option2">Option 2</option>');
-                    $secondDropdown.show();
-                } else if (selectedCategory === 'category2') {
-                    // Populate and show the second dropdown based on Category 2
-                    $secondDropdown.append('<option value="option3">Option 3</option>');
-                    $secondDropdown.append('<option value="option4">Option 4</option>');
-                    $secondDropdown.show();
-                } else if (selectedCategory === 'category3') {
-                    // Populate and show the second dropdown based on Category 3
-                    $secondDropdown.append('<option value="option5">Option 5</option>');
-                    $secondDropdown.append('<option value="option6">Option 6</option>');
-                    $secondDropdown.show();
-                }
+                var data = {
+                    parent_asset_id: selected_domain
+                };
+                
+                $.ajax({
+                    type: "GET",
+                    url: "/domains/children?parent_asset_id=" + selected_domain,
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (data) {
+                        if (data.length == 0) {
+                            $database_dropdown.append('<option value="">No Databases</option>');
+                            return;
+                        } else {
+                            $database_dropdown.append('<option value="">Select Database</option>');
+                            $.each(data, function (key, value) {
+                                $database_dropdown.append('<option value="' + value.asset_id + '">' + value.name + '</option>');
+                            });
+                        }
+                    },
+                    failure: function (errMsg) {
+                        alert(errMsg);
+                    }
+                });
+
+                $("#database_form").show();
+
+                $database_dropdown.show();
             });
 
             $("#domain_name").on('keyup', function (e) {
@@ -100,11 +142,13 @@
                 return false;
             });
 
-            domain_id = getParam('domain_id');
-            if (domain_id) {
-                $('#domain_dropdown').val(domain_id);
-                $('#domain_dropdown').trigger('change');
-            }
+            $("#database_name").on('keyup', function (e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    add_database();
+                }
+                e.preventDefault();
+                return false;
+            });
         });
     </script>
 </body>
