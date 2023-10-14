@@ -35,3 +35,10 @@ class Domain(Asset):
             
         es.insert_new_document(index_name="data_catalog", document_id=self.asset_id, document=new_domain)
         return new_domain
+    
+    @staticmethod
+    def get_all():
+        '''
+        Returns all assets with type domain
+        '''
+        return Asset.find_all(asset_type="domain")

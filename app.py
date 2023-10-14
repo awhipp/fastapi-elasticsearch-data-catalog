@@ -16,6 +16,8 @@ from routes.Database import bp as database_api
 from routes.Table import bp as table_api
 from routes.Column import bp as column_api
 
+from models.Domain import Domain
+
 # Create a FastAPI app
 app = FastAPI()
 
@@ -35,7 +37,8 @@ templates = Jinja2Templates(directory="templates")
 async def home_visualization(request: Request):
     '''
     '''
-    return templates.TemplateResponse("visualize.html", {"request": request})
+    domains = Domain.get_all()
+    return templates.TemplateResponse("index.html", {"request": request, "domains": domains})
 
 
 

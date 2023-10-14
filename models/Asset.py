@@ -91,3 +91,25 @@ class Asset(BaseModel):
             return None
         else:
             return results[0]
+        
+    @staticmethod
+    def find_all(asset_type: str = None):
+        '''
+        Searches for all assets and returns them
+        '''
+        query = {
+                "match_all": {}
+            }
+        if asset_type is not None:
+            query = {
+                "bool": {
+                    "must": [
+                        {
+                            "match": {
+                                "asset_type": asset_type
+                            }
+                        }
+                    ]
+                }
+            }
+        return es.search(index_name="data_catalog", query=query)    

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dynamic Dropdowns</title>
+</head>
+<body>
+    <form>
+        <select id="domain_dropdown" name="domain_dropdown">
+            {% for domain in domains %}
+                <option value="{{ domain.asset_id }}">{{ domain.name }}</option>
+            {% endfor %}
+        </select>
+
+        <input type="text" id="domain_name" name="domain_name" placeholder="Domain Name" required>
+
+        <input type="button" onclick="add_domain()" value="Create Domain"/>
+
+        <input type="submit" value="Submit" onclick="return false" style="display: none;"/>
+    </form>
+
+    <form>
+        <select id="secondDropdown" name="secondDropdown" style="display: none;">
+            <!-- This dropdown will be initially hidden -->
+        </select>
+    </form>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+
+        function add_domain() {
+            var domain_name = document.getElementById("domain_name").value;
+            if (domain_name == "") {
+                alert("Please enter a domain name");
+                return;
+            }
+            var data = {
+                name: domain_name,
+            };
+            $.ajax({
+                type: "POST",
+                url: "/domains",
+                data: JSON.stringify(data),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (data) {
+                    console.log(data);
+                    alert("Domain created successfully");
+                    // Reload with new domain assetId in hash
+                    window.location.href = "/?domain_id=" + data.asset_id;
+                },
+                failure: function (errMsg) {
+                    alert(errMsg);
+                }
+            });
+        }
+
+        function getParam(param){
+            var both = location.search.replace('?', '').split('&');
+            for(var i=0,a,l=both.length; i<l; i++){
+                a = both[i].split('=');
+                if(a[0] === encodeURIComponent(param)){
+                return decodeURIComponent(a[1]);
+                }
+            }
+            return undefined;
+        }
+        
+        $(document).ready(function () {
+            $('#domain_dropdown').on('change', function () {
+                var selectedCategory = $(this).val();
+                var $secondDropdown = $('#secondDropdown');
+
+                // Clear and hide the second dropdown
+                $secondDropdown.empty().hide();
+
+                if (selectedCategory === 'category1') {
+                    // Populate and show the second dropdown based on Category 1
+                    $secondDropdown.append('<option value="option1">Option 1</option>');
+                    $secondDropdown.append('<option value="option2">Option 2</option>');
+                    $secondDropdown.show();
+                } else if (selectedCategory === 'category2') {
+                    // Populate and show the second dropdown based on Category 2
+                    $secondDropdown.append('<option value="option3">Option 3</option>');
+                    $secondDropdown.append('<option value="option4">Option 4</option>');
+                    $secondDropdown.show();
+                } else if (selectedCategory === 'category3') {
+                    // Populate and show the second dropdown based on Category 3
+                    $secondDropdown.append('<option value="option5">Option 5</option>');
+                    $secondDropdown.append('<option value="option6">Option 6</option>');
+                    $secondDropdown.show();
+                }
+            });
+
+            $("#domain_name").on('keyup', function (e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    add_domain()
+                }
+                e.preventDefault();
+                return false;
+            });
+
+            domain_id = getParam('domain_id');
+            if (domain_id) {
+                $('#domain_dropdown').val(domain_id);
+                $('#domain_dropdown').trigger('change');
+            }
+        });
+    </script>
+</body>
+</html>
